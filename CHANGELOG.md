@@ -2,6 +2,12 @@
 
 All notable changes to tmux-powerkit will be documented in this file.
 
+## [5.28.7](https://github.com/fabioluciano/tmux-powerkit/compare/v5.28.6...v5.28.7) (2026-06-09)
+
+### Bug Fixes
+
+* improve security and reliability across core and plugins ([#225](https://github.com/fabioluciano/tmux-powerkit/issues/225)) ([1dca115](https://github.com/fabioluciano/tmux-powerkit/commit/1dca115bf6f218f2998b4284d2758715c16ceb31))
+
 ## [5.28.6](https://github.com/fabioluciano/tmux-powerkit/compare/v5.28.5...v5.28.6) (2026-04-29)
 
 ### Bug Fixes
