@@ -2,6 +2,12 @@
 
 All notable changes to tmux-powerkit will be documented in this file.
 
+## [5.28.8](https://github.com/fabioluciano/tmux-powerkit/compare/v5.28.7...v5.28.8) (2026-06-30)
+
+### Bug Fixes
+
+* **loadavg:** change warning_threshold_multiplier default from 2 to 1 ([#226](https://github.com/fabioluciano/tmux-powerkit/issues/226)) ([f83a417](https://github.com/fabioluciano/tmux-powerkit/commit/f83a41785853ded6f9f34caf6e30d7fafd978061))
+
 ## [5.28.7](https://github.com/fabioluciano/tmux-powerkit/compare/v5.28.6...v5.28.7) (2026-06-09)
 
 ### Bug Fixes
