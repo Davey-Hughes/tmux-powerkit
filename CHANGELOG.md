@@ -2,6 +2,12 @@
 
 All notable changes to tmux-powerkit will be documented in this file.
 
+## [5.28.9](https://github.com/fabioluciano/tmux-powerkit/compare/v5.28.8...v5.28.9) (2026-07-04)
+
+### Bug Fixes
+
+* Set fill color when building the message and command styles ([#227](https://github.com/fabioluciano/tmux-powerkit/issues/227)) ([6c4389a](https://github.com/fabioluciano/tmux-powerkit/commit/6c4389ac78b97d8538ef67e1b59a3ee2c331b747))
+
 ## [5.28.8](https://github.com/fabioluciano/tmux-powerkit/compare/v5.28.7...v5.28.8) (2026-06-30)
 
 ### Bug Fixes
