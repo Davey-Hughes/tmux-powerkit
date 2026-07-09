@@ -46,32 +46,32 @@ _get_icon_padding() {
 
     # Wide icons that need extra space (emoji, special glyphs)
     case "$icon" in
-        # Battery icons
-        🔋|⚡|🔌) echo " " ;;
+    # Battery icons
+    🔋 | ⚡ | 🔌) echo " " ;;
 
-        # Network icons
-        📶|🌐|📡|📲) echo " " ;;
+    # Network icons
+    📶 | 🌐 | 📡 | 📲) echo " " ;;
 
-        # System icons
-        💻|🖥️|⚙️|🔧) echo " " ;;
+    # System icons
+    💻 | 🖥️ | ⚙️ | 🔧) echo " " ;;
 
-        # Status icons
-        ✅|❌|⚠️|ℹ️|💡) echo " " ;;
+    # Status icons
+    ✅ | ❌ | ⚠️ | ℹ️ | 💡) echo " " ;;
 
-        # Media icons
-        🎵|🎬|📺|🔊) echo " " ;;
+    # Media icons
+    🎵 | 🎬 | 📺 | 🔊) echo " " ;;
 
-        # File/folder icons
-        📁|📂|📄|📝) echo " " ;;
+    # File/folder icons
+    📁 | 📂 | 📄 | 📝) echo " " ;;
 
-        # People/communication
-        👤|👥|💬|📧) echo " " ;;
+    # People/communication
+    👤 | 👥 | 💬 | 📧) echo " " ;;
 
-        # Git icons
-        🔀|🔁|🔄) echo " " ;;
+    # Git icons
+    🔀 | 🔁 | 🔄) echo " " ;;
 
-        # Default: no extra space needed
-        *) echo "" ;;
+    # Default: no extra space needed
+    *) echo "" ;;
     esac
 }
 
@@ -94,7 +94,10 @@ get_segment_template() {
     if [[ -n "$plugin" ]]; then
         local plugin_template
         plugin_template=$(get_tmux_option "@powerkit_plugin_${plugin}_template" "")
-        [[ -n "$plugin_template" ]] && { printf '%s' "$plugin_template"; return; }
+        [[ -n "$plugin_template" ]] && {
+            printf '%s' "$plugin_template"
+            return
+        }
     fi
 
     # Fall back to global template
@@ -203,7 +206,7 @@ build_plugin_segment() {
 
     # Resolve colors based on state/health/context
     local content_bg content_fg icon_bg icon_fg
-    read -r content_bg content_fg icon_bg icon_fg <<< "$(resolve_plugin_colors_full "$state" "$health" "$context")"
+    read -r content_bg content_fg icon_bg icon_fg <<<"$(resolve_plugin_colors_full "$state" "$health" "$context")"
 
     # Get LEFT separator (◀) - plugins in status-right use left-pointing arrows
     local sep_left="${_SEP_CACHE_LEFT}"
@@ -323,6 +326,19 @@ render_plugin_segment() {
 
     local segment=""
 
+    local effective_bg
+    if [[ -n "$icon" && "$icon" != "none" ]]; then
+        effective_bg="$icon_bg"
+    else
+        local no_icon_bg_style
+        no_icon_bg_style=$(get_tmux_option "@powerkit_plugin_no_icon_bg_style" "icon")
+        if [[ "$no_icon_bg_style" == "content" ]]; then
+            effective_bg="$content_bg"
+        else
+            effective_bg="$icon_bg"
+        fi
+    fi
+
     # Opening separator logic depends on side and position
     if [[ "$side" == "left" ]]; then
         # Left side: plugins flow left-to-right with RIGHT separators (▶)
@@ -330,10 +346,10 @@ render_plugin_segment() {
         # Other plugins: normal right separator
         if [[ $is_first -eq 1 ]]; then
             # First plugin: small padding from edge
-            segment+="#[bg=${icon_bg}] "
+            segment+="#[bg=${effective_bg}] "
         else
             # Right-pointing (▶): fg=source (prev), bg=destination (icon)
-            segment+="#[fg=${prev_bg},bg=${icon_bg}]${_SEP_CACHE_RIGHT}#[none]"
+            segment+="#[fg=${prev_bg},bg=${effective_bg}]${_SEP_CACHE_RIGHT}#[none]"
         fi
     else
         # Right side: plugins flow right-to-left with LEFT separators (◀)
@@ -346,12 +362,12 @@ render_plugin_segment() {
             sep_opening="${_SEP_CACHE_LEFT}"
         fi
         # Left-pointing (◀): fg=destination (icon), bg=source (prev)
-        segment+="#[fg=${icon_bg},bg=${prev_bg}]${sep_opening}#[none]"
+        segment+="#[fg=${effective_bg},bg=${prev_bg}]${sep_opening}#[none]"
     fi
 
     # Icon section (no bold - icons don't need emphasis)
     # No left padding (separator provides visual space), only right padding
-    if [[ -n "$icon" ]]; then
+    if [[ -n "$icon" && "$icon" != "none" ]]; then
         segment+="#[fg=${icon_fg},bg=${icon_bg}]${icon} "
         # Internal separator between icon and content
         if [[ "$side" == "left" ]]; then
@@ -396,7 +412,7 @@ _parse_plugin_list() {
     local group_colors_str
     group_colors_str=$(get_tmux_option "@powerkit_plugin_group_colors" "${POWERKIT_DEFAULT_PLUGIN_GROUP_COLORS}")
     local -a color_palette
-    IFS=',' read -ra color_palette <<< "$group_colors_str"
+    IFS=',' read -ra color_palette <<<"$group_colors_str"
 
     local group_counter=0
     local current_pos=0
@@ -415,7 +431,7 @@ _parse_plugin_list() {
             current_pos=$((current_pos + 6))
 
             # Assign color from palette (cycle if more groups than colors)
-            local color_idx=$(( (group_counter - 1) % ${#color_palette[@]} ))
+            local color_idx=$(((group_counter - 1) % ${#color_palette[@]}))
             _GROUP_COLORS[$group_counter]=$(resolve_color "${color_palette[$color_idx]}")
 
             # Find matching closing parenthesis
@@ -430,11 +446,11 @@ _parse_plugin_list() {
 
             # Extract group content (plugins inside group())
             local group_content="${plugins_str:$group_start:$((current_pos - group_start))}"
-            ((current_pos++))  # Skip closing )
+            ((current_pos++)) # Skip closing )
 
             # Parse plugins inside group
             local -a group_plugins
-            IFS=',' read -ra group_plugins <<< "$group_content"
+            IFS=',' read -ra group_plugins <<<"$group_content"
             for plugin in "${group_plugins[@]}"; do
                 # Trim whitespace (uses nameref - zero subshells)
                 trim_inplace plugin
@@ -578,22 +594,22 @@ _resolve_plugin_colors() {
 
         # State overrides take precedence (inactive/failed are semantic, not visual)
         case "$state" in
-            inactive)
-                content_bg=$(get_color "disabled-base")
-                content_fg=$(get_color "white")
-                icon_bg=$(get_color "disabled-base-lighter")
-                icon_fg=$(get_color "white")
-                printf '%s %s %s %s' "$content_bg" "$content_fg" "$icon_bg" "$icon_fg"
-                return
-                ;;
-            failed)
-                content_bg=$(get_color "error-base")
-                content_fg=$(get_color "error-base-darkest")
-                icon_bg=$(get_color "error-base-lighter")
-                icon_fg=$(get_color "error-base-darkest")
-                printf '%s %s %s %s' "$content_bg" "$content_fg" "$icon_bg" "$icon_fg"
-                return
-                ;;
+        inactive)
+            content_bg=$(get_color "disabled-base")
+            content_fg=$(get_color "white")
+            icon_bg=$(get_color "disabled-base-lighter")
+            icon_fg=$(get_color "white")
+            printf '%s %s %s %s' "$content_bg" "$content_fg" "$icon_bg" "$icon_fg"
+            return
+            ;;
+        failed)
+            content_bg=$(get_color "error-base")
+            content_fg=$(get_color "error-base-darkest")
+            icon_bg=$(get_color "error-base-lighter")
+            icon_fg=$(get_color "error-base-darkest")
+            printf '%s %s %s %s' "$content_bg" "$content_fg" "$icon_bg" "$icon_fg"
+            return
+            ;;
         esac
 
         # Transparent mode: skip group color override, fall through to health-based
@@ -681,7 +697,7 @@ render_plugins() {
     local spacing_bg spacing_fg
     if [[ "$transparent" == "true" ]]; then
         spacing_bg="default"
-        spacing_fg=$(get_color "statusbar-bg")  # Use statusbar-bg instead of background
+        spacing_fg=$(get_color "statusbar-bg") # Use statusbar-bg instead of background
     else
         local resolved_statusbar_bg
         resolved_statusbar_bg=$(resolve_color "statusbar-bg")
@@ -725,8 +741,8 @@ render_plugins() {
         # Parse data: icon|content|state|health|stale (5 fields from lifecycle)
         # External plugins have 2 extra fields: accent|accent_icon
         local icon content state health stale
-        IFS=$'\x1f' read -r icon content state health stale _ _ <<< "$plugin_data"
-        stale="${stale:-0}"  # Default for backward compatibility
+        IFS=$'\x1f' read -r icon content state health stale _ _ <<<"$plugin_data"
+        stale="${stale:-0}" # Default for backward compatibility
 
         # Apply threshold filter (skip for external plugins)
         [[ $is_external -eq 0 ]] && _is_hidden_by_threshold "$plugin_name" "$health" && continue
@@ -755,11 +771,11 @@ render_plugins() {
         local is_external="${visible_is_external[$render_idx]}"
         local current_group_id="${visible_group_id[$render_idx]}"
         local icon content state health stale accent accent_icon
-        IFS=$'\x1f' read -r icon content state health stale accent accent_icon <<< "$plugin_data"
-        stale="${stale:-0}"  # Default for backward compatibility
+        IFS=$'\x1f' read -r icon content state health stale accent accent_icon <<<"$plugin_data"
+        stale="${stale:-0}" # Default for backward compatibility
 
-        local is_first=$(( render_idx == 0 ? 1 : 0 ))
-        local is_last=$(( render_idx == total_plugins - 1 ? 1 : 0 ))
+        local is_first=$((render_idx == 0 ? 1 : 0))
+        local is_last=$((render_idx == total_plugins - 1 ? 1 : 0))
 
         # Determine spacing/separator behavior based on groups
         # - Same group (non-zero): use group color as separator background (no gap)
@@ -807,7 +823,7 @@ render_plugins() {
         fi
 
         local content_bg content_fg icon_bg icon_fg
-        read -r content_bg content_fg icon_bg icon_fg <<< "$(_resolve_plugin_colors "$is_external" "$state" "$health" "$stale" "$accent" "$accent_icon" "$group_color")"
+        read -r content_bg content_fg icon_bg icon_fg <<<"$(_resolve_plugin_colors "$is_external" "$state" "$health" "$stale" "$accent" "$accent_icon" "$group_color")"
 
         # Render segment (pass is_first, is_last and side for correct separator styling)
         local segment
