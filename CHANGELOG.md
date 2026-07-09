@@ -2,6 +2,12 @@
 
 All notable changes to tmux-powerkit will be documented in this file.
 
+## [5.28.10](https://github.com/fabioluciano/tmux-powerkit/compare/v5.28.9...v5.28.10) (2026-07-09)
+
+### Bug Fixes
+
+* **windows:** use compatible glyph metrics for all index icon styles ([0a9ed14](https://github.com/fabioluciano/tmux-powerkit/commit/0a9ed14e7b6b036b1bb1da6b6bf5dd3b91b37adb))
+
 ## [5.28.9](https://github.com/fabioluciano/tmux-powerkit/compare/v5.28.8...v5.28.9) (2026-07-04)
 
 ### Bug Fixes
