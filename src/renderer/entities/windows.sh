@@ -140,19 +140,15 @@ _windows_build_separator() {
         local spacing_sep_char
         spacing_sep_char=$(_windows_get_spacing_sep_char)
 
-        # Check for first window - use #{base-index} to support both base-index=0 and base-index=1
-        local is_first='#{?#{==:#{window_index},#{base-index}},'
-        local not_first='#{?#{!=:#{window_index},#{base-index}},'
-
         if [[ "$side" == "left" ]]; then
             # Left side ▶: gap → window
             # ▶: fg=gap (left), bg=window (right)
             # When :all suffix is enabled, first window uses edge separator
             if [[ "$_W_ROUND_ALL_EDGES" == "true" ]]; then
                 # First window: edge separator, others: normal separator
-                printf '%s#[fg=%s#,bg=%s]%s,%s#[fg=%s#,bg=%s]%s,}' \
-                    "$is_first" "$spacing_fg" "$index_bg" "$_W_EDGE_SEP_CHAR" \
-                    "$not_first" "$spacing_fg" "$index_bg" "$spacing_sep_char"
+                printf '#{?window_start_flag,#[fg=%s#,bg=%s]%s,#[fg=%s#,bg=%s]%s}' \
+                    "$spacing_fg" "$index_bg" "$_W_EDGE_SEP_CHAR" \
+                    "$spacing_fg" "$index_bg" "$spacing_sep_char"
             else
                 printf '#[fg=%s#,bg=%s]%s' "$spacing_fg" "$index_bg" "$spacing_sep_char"
             fi
@@ -160,22 +156,21 @@ _windows_build_separator() {
             # Center side ▶: gap → window
             # ▶: fg=gap (left), bg=window (right)
             # Skip first window - compositor handles edge separator
-            printf '%s#[fg=%s#,bg=%s]%s,}' "$not_first" "$spacing_fg" "$index_bg" "$spacing_sep_char"
+            printf '#{?window_start_flag,,#[fg=%s#,bg=%s]%s}' "$spacing_fg" "$index_bg" "$spacing_sep_char"
         elif [[ "$side" == "right" ]]; then
             # Right side ◀: gap → window
             # ◀: fg=window (right), bg=gap (left)
             # Skip first window - compositor handles edge separator
-            printf '%s#[fg=%s#,bg=%s]%s,}' "$not_first" "$index_bg" "$spacing_fg" "$spacing_sep_char"
+            printf '#{?window_start_flag,,#[fg=%s#,bg=%s]%s}' "$index_bg" "$spacing_fg" "$spacing_sep_char"
         fi
     else
         # For all sides, first window doesn't need edge separator (handled by compositor)
         # Only add inter-window separators (window 2+)
-        # Use #{base-index} to support both base-index=0 and base-index=1
         if [[ "$side" == "left" || "$side" == "center" ]]; then
-            printf '#{?#{!=:#{window_index},#{base-index}},#[fg=%s#,bg=%s]%s,}' "$previous_bg" "$index_bg" "$_W_SEP_CHAR"
+            printf '#{?window_start_flag,,#[fg=%s#,bg=%s]%s}' "$previous_bg" "$index_bg" "$_W_SEP_CHAR"
         else
             # Right side: separator points left (◀)
-            printf '#{?#{!=:#{window_index},#{base-index}},#[fg=%s#,bg=%s]%s,}' "$index_bg" "$previous_bg" "$_W_SEP_CHAR"
+            printf '#{?window_start_flag,,#[fg=%s#,bg=%s]%s}' "$index_bg" "$previous_bg" "$_W_SEP_CHAR"
         fi
     fi
 }
@@ -237,22 +232,15 @@ _windows_build_spacing() {
     local spacing_sep_char
     spacing_sep_char=$(_windows_get_spacing_sep_char)
 
-    # Exit separator: window → gap (between windows only)
-    # Skip for LAST window (edge separator handled by compositor)
-    # Last window index = base-index + session_windows - 1
-    local not_last_cond='#{?#{!=:#{window_index},#{e|-:#{e|+:#{base-index},#{session_windows}},1}},'
-
     if [[ "$side" == "left" || "$side" == "center" ]]; then
         # Left side ▶: window → gap
         # ▶: fg=window (left), bg=gap (right)
-        printf '%s#[fg=%s#,bg=%s]%s,}' \
-            "$not_last_cond" \
+        printf '#{?window_end_flag,,#[fg=%s#,bg=%s]%s}' \
             "$content_bg" "$spacing_fg" "$spacing_sep_char"
     else
         # Right side ◀: window → gap
         # ◀: fg=gap (right), bg=window (left)
-        printf '%s#[fg=%s#,bg=%s]%s,}' \
-            "$not_last_cond" \
+        printf '#{?window_end_flag,,#[fg=%s#,bg=%s]%s}' \
             "$spacing_fg" "$content_bg" "$spacing_sep_char"
     fi
 }
