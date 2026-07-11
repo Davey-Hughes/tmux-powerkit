@@ -226,6 +226,28 @@ window_get_icon_format() {
         format="#{?#{==:#{pane_current_command},$cmd},$icon,$format}"
     done
 
+    # User-defined per-command icon overrides from ~/.tmux.conf.
+    # Format: "cmd=icon,cmd=icon" (e.g. "fish=,node=").
+    # Applied after the built-in map so user entries take precedence.
+    local overrides
+    overrides=$(get_tmux_option "@powerkit_window_command_icons" "")
+    if [[ -n "$overrides" ]]; then
+        local pair
+        local -a override_pairs
+        IFS=',' read -ra override_pairs <<< "$overrides"
+        for pair in "${override_pairs[@]}"; do
+            # Skip entries without a '=' separator
+            [[ "$pair" != *"="* ]] && continue
+            cmd="${pair%%=*}"
+            icon="${pair#*=}"
+            # Trim surrounding whitespace from the command name
+            cmd="${cmd#"${cmd%%[![:space:]]*}"}"
+            cmd="${cmd%"${cmd##*[![:space:]]}"}"
+            [[ -z "$cmd" ]] && continue
+            format="#{?#{==:#{pane_current_command},$cmd},$icon,$format}"
+        done
+    fi
+
     printf '%s' "$format"
 }
 

@@ -272,10 +272,9 @@ _get_windows_format_left_centered() {
     # === EXIT EDGE SEPARATOR ===
     # From last window's bg to statusbar-bg
     # ▶: fg = origin (last window), bg = destination (gap)
-    # Last window index = base-index + session_windows - 1
     if [[ -n "$sep_char" ]]; then
         local last_bg
-        last_bg="#{?#{==:#{active_window_index},#{e|-:#{e|+:#{base-index},#{session_windows}},1}},${active_bg},${inactive_bg}}"
+        last_bg="#{W:#{?window_end_flag,${inactive_bg},},#{?window_end_flag,${active_bg},}}"
         fmt+="#[fg=${last_bg},bg=${status_bg}]${sep_char}"
     fi
 
@@ -356,10 +355,10 @@ _get_windows_format_right_centered() {
         # Determine which background to use based on show_index settings
         if [[ "$show_index_active" == "false" && "$show_index_inactive" == "false" ]]; then
             # Never show index, use content color
-            first_bg="#{?#{==:#{active_window_index},#{base-index}},$(resolve_color 'window-active-base'),${first_content_bg}}"
+            first_bg="#{W:#{?window_start_flag,${first_content_bg},},#{?window_start_flag,$(resolve_color 'window-active-base'),}}"
         elif [[ "$show_index_active" == "true" || "$show_index_inactive" == "true" ]]; then
             # Show index for at least one state, use index color
-            first_index_bg="#{?#{==:#{active_window_index},#{base-index}},${active_index_bg},${inactive_index_bg}}"
+            first_index_bg="#{W:#{?window_start_flag,${inactive_index_bg},},#{?window_start_flag,${active_index_bg},}}"
             first_bg="$first_index_bg"
         else
             first_bg="$first_index_bg"
@@ -400,8 +399,7 @@ _get_windows_format_right_centered() {
         if [[ -n "$exit_sep_char" ]]; then
             active_bg=$(resolve_color "window-active-base")
             inactive_bg=$(resolve_color "window-inactive-base")
-            # Last window index = base-index + session_windows - 1
-            last_bg="#{?#{==:#{active_window_index},#{e|-:#{e|+:#{base-index},#{session_windows}},1}},${active_bg},${inactive_bg}}"
+            last_bg="#{W:#{?window_end_flag,${inactive_bg},},#{?window_end_flag,${active_bg},}}"
             fmt+="#[fg=${last_bg},bg=${status_bg}]${exit_sep_char}"
         fi
     fi
@@ -453,10 +451,10 @@ _get_windows_format_centered() {
         # Determine which background to use based on show_index settings
         if [[ "$show_index_active" == "false" && "$show_index_inactive" == "false" ]]; then
             # Never show index, use content color
-            first_bg="#{?#{==:#{active_window_index},#{base-index}},$(resolve_color 'window-active-base'),${first_content_bg}}"
+            first_bg="#{W:#{?window_start_flag,${first_content_bg},},#{?window_start_flag,$(resolve_color 'window-active-base'),}}"
         elif [[ "$show_index_active" == "true" || "$show_index_inactive" == "true" ]]; then
             # Show index for at least one state, use index color
-            first_index_bg="#{?#{==:#{active_window_index},#{base-index}},${active_index_bg},${inactive_index_bg}}"
+            first_index_bg="#{W:#{?window_start_flag,${inactive_index_bg},},#{?window_start_flag,${active_index_bg},}}"
             first_bg="$first_index_bg"
         else
             first_bg="$first_index_bg"
@@ -496,7 +494,7 @@ _get_windows_format_centered() {
     exit_sep_char=$(get_edge_right_separator)
     if [[ -n "$exit_sep_char" ]]; then
         local last_bg
-        last_bg="#{?#{==:#{active_window_index},#{e|-:#{e|+:#{base-index},#{session_windows}},1}},${active_bg},${inactive_bg}}"
+        last_bg="#{W:#{?window_end_flag,${inactive_bg},},#{?window_end_flag,${active_bg},}}"
         fmt+="#[fg=${last_bg},bg=${status_bg}]${exit_sep_char}"
     fi
 
@@ -526,9 +524,8 @@ _build_left_edge_separator() {
     inactive_bg=$(resolve_color "window-inactive-base")
 
     # Conditional: if last window is active, use active_bg; else use inactive_bg
-    # Last window index = base-index + session_windows - 1
     local last_bg
-    last_bg="#{?#{==:#{active_window_index},#{e|-:#{e|+:#{base-index},#{session_windows}},1}},${active_bg},${inactive_bg}}"
+    last_bg="#{W:#{?window_end_flag,${inactive_bg},},#{?window_end_flag,${active_bg},}}"
 
     # Build separator: fg=last_element_bg (origin), bg=status_bg (destination)
     printf '#[fg=%s,bg=%s]%s' "$last_bg" "$status_bg" "$sep_char"
@@ -553,9 +550,8 @@ _build_windows_exit_separator() {
     inactive_bg=$(resolve_color "window-inactive-base")
 
     # Conditional: if last window is active, use active_bg; else use inactive_bg
-    # Last window index = base-index + session_windows - 1
     local last_bg
-    last_bg="#{?#{==:#{active_window_index},#{e|-:#{e|+:#{base-index},#{session_windows}},1}},${active_bg},${inactive_bg}}"
+    last_bg="#{W:#{?window_end_flag,${inactive_bg},},#{?window_end_flag,${active_bg},}}"
 
     # Powerline convention: fg = origin, bg = destination
     # For window → gap: fg = window, bg = gap

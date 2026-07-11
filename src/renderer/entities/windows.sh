@@ -167,10 +167,10 @@ _windows_build_separator() {
         # For all sides, first window doesn't need edge separator (handled by compositor)
         # Only add inter-window separators (window 2+)
         if [[ "$side" == "left" || "$side" == "center" ]]; then
-            printf '#{?window_start_flag,,#[fg=%s#,bg=%s]%s}' "$previous_bg" "$index_bg" "$_W_SEP_CHAR"
+            printf '#[fg=%s,bg=%s]#{?window_start_flag,,%s}' "$previous_bg" "$index_bg" "$_W_SEP_CHAR"
         else
             # Right side: separator points left (◀)
-            printf '#{?window_start_flag,,#[fg=%s#,bg=%s]%s}' "$index_bg" "$previous_bg" "$_W_SEP_CHAR"
+            printf '#[fg=%s,bg=%s]#{?window_start_flag,,%s}' "$index_bg" "$previous_bg" "$_W_SEP_CHAR"
         fi
     fi
 }
@@ -261,7 +261,11 @@ _windows_build_format() {
     # Previous window background for transitions
     local active_content_bg previous_bg
     active_content_bg=$(resolve_color "window-active-base")
-    previous_bg="#{?#{==:#{e|-:#{window_index},1},#{active_window_index}},${active_content_bg},${content_bg}}"
+    
+    # Use nested W formats to check if the window immediately preceding this one is active.
+    # This correctly handles non-contiguous window indices.
+    local prev_is_active='#{m:*=1|#{window_index}=*,#{W:|#{window_index}=0,|#{window_index}=1}}'
+    previous_bg="#{?${prev_is_active},${active_content_bg},${content_bg}}"
 
     # Window content assembled by contract helper (icon + title)
     local window_content
@@ -385,9 +389,8 @@ windows_get_first_bg() {
     active_index_bg=$(resolve_color "window-active-base-lighter")
     inactive_index_bg=$(resolve_color "window-inactive-base-lighter")
 
-    # If first window (base-index) is active, use active color; else use inactive
-    # Use #{base-index} to support both base-index=0 and base-index=1
-    printf '#{?#{==:#{active_window_index},#{base-index}},%s,%s}' "$active_index_bg" "$inactive_index_bg"
+    # Use W format to reliably get the first window's state regardless of non-contiguous indices
+    printf '#{W:#{?window_start_flag,%s,},#{?window_start_flag,%s,}}' "$inactive_index_bg" "$active_index_bg"
 }
 
 # Get the background color of the last window (for outgoing separator)
@@ -397,9 +400,8 @@ windows_get_last_bg() {
     active_content_bg=$(resolve_color "window-active-base")
     inactive_content_bg=$(resolve_color "window-inactive-base")
 
-    # If last window is active, use active color; else use inactive
-    # Last window index = base-index + session_windows - 1
-    printf '#{?#{==:#{active_window_index},#{e|-:#{e|+:#{base-index},#{session_windows}},1}},%s,%s}' "$active_content_bg" "$inactive_content_bg"
+    # Use W format to reliably get the last window's state regardless of non-contiguous indices
+    printf '#{W:#{?window_end_flag,%s,},#{?window_end_flag,%s,}}' "$inactive_content_bg" "$active_content_bg"
 }
 
 # Configure window formats in tmux
